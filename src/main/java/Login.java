@@ -32,6 +32,9 @@ public class Login extends HttpServlet {
 
 
 
-
-
+        // estadisticas son un doget
+        // esta n es un servlet su teamplate va fuera de la carpeta de teamplates
+      // no son 3 servlets, son dos. la de fin es el mismo servlet que la del juego
+      // uns ervelt caca que haga cosas distintas en el do gest y en el do post
+      // el hecho de que tenga dos clases de constantes es una bomba, solo se usa una
 }}
