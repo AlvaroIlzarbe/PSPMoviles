@@ -20,6 +20,8 @@ public final class GameConstants {
     public static final String VAR_INTENTOS = "intentos";
 
 
+    public static final String CONTADOR = "contador";
+
 
 
 

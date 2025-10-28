@@ -30,5 +30,6 @@ public class ThymeleafInitializer implements ServletContextListener {
         servletContext.setAttribute(ThymeleafConstants.TEAMPLATE_KEY_BUSQUEDA,templateEngine);
 
 
-    }
+    }}
+
 

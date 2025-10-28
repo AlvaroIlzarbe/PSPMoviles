@@ -1,8 +1,8 @@
 package Config;
 
-public class Messageconstants {
+public class MessageConstants {
 
-    private Messageconstants() {}
+    private MessageConstants() {}
 
 
     public static final String MSG_NUMERO_MAYOR = "El número a adivinar es mayor";
@@ -16,4 +16,5 @@ public class Messageconstants {
     public static final String VAR_ERROR = "error";
 
 
+    bomba posible
 }
