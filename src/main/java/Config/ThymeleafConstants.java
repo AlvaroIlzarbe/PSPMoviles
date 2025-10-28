@@ -1,8 +1,8 @@
 package Config;
 
-public final class ThymeleadConstants {
+public final class ThymeleafConstants {
 
-    private ThymeleadConstants() {}
+    private ThymeleafConstants() {}
     public static final String TEAMPLATE_KEY_BUSQUEDA ="com.dam.TemplateEngine";
     public static final String TEAMPLATE_MODE = "HTML";
     public static final String CHARACTER_ENCODING = "UTF-8";

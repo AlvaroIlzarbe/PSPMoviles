@@ -18,6 +18,6 @@ public final class UrlConstants {
         public static final String TEAMPLATE_PANTALLA_JUEGO = "juego";
         public static final String TEAMPLATE_PANTALLA_FINAL = "fin";
         public static final String TEAMPLATE_PUNTUACION = "puntuacion";
-
+si algo esta en negro borrar que es una bomba
 
 }
