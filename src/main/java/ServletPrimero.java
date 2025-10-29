@@ -1,4 +1,3 @@
-// Implementación del servlet principal (pantalla uno / menú / juego)
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -6,8 +5,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
+import Config.ThymeleafConstants;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.WebContext;
+import org.thymeleaf.web.IWebExchange;
+import org.thymeleaf.web.servlet.JakartaServletWebApplication;
+
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -16,9 +20,16 @@ import java.util.Random;
 @WebServlet("/menu")
 public class ServletPrimero extends HttpServlet {
 
+    private TemplateEngine templateEngine;
+
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    public void init() throws ServletException {
+        this.templateEngine = (TemplateEngine) getServletContext()
+                .getAttribute(ThymeleafConstants.TEAMPLATE_KEY_BUSQUEDA);
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         HttpSession session = req.getSession(false);
         if (session == null || session.getAttribute("user") == null) {
             resp.sendRedirect(req.getContextPath() + "/pantallainicial.html");
@@ -26,24 +37,29 @@ public class ServletPrimero extends HttpServlet {
         }
 
         String view = req.getParameter("view");
-        resp.setContentType("text/html;charset=UTF-8");
-        PrintWriter out = resp.getWriter();
+        resp.setContentType(ThymeleafConstants.CONTENT_TYPE);
+
+        JakartaServletWebApplication application = JakartaServletWebApplication.buildApplication(getServletContext());
+        IWebExchange webExchange = application.buildExchange(req, resp);
+        WebContext context = new WebContext(webExchange);
 
         if ("juego".equals(view)) {
-            renderJuego(out, session);
+            templateEngine.process("pantallaJuego", context, resp.getWriter());
         } else if ("resultado".equals(view)) {
-            renderResultado(out, session);
+            String resultado = (String) session.getAttribute("resultado");
+            context.setVariable("resultado", resultado != null ? resultado : "Sin resultado");
+            templateEngine.process("pantallaFinalJuego", context, resp.getWriter());
         } else {
-            renderMenu(out, session);
+            String usuario = (String) session.getAttribute("user");
+            context.setVariable("usuario", usuario);
+            templateEngine.process("pantallaMenu", context, resp.getWriter());
         }
     }
 
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-            throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String action = req.getParameter("action");
 
-        // Si action es null, venimos del formulario de login (pantallainicial.html)
         if (action == null) {
             procesarLogin(req, resp);
             return;
@@ -58,16 +74,19 @@ public class ServletPrimero extends HttpServlet {
         }
 
         if (session == null || session.getAttribute("user") == null) {
-            // Sesión inválida -> volver al login
             resp.sendRedirect(req.getContextPath() + "/pantallainicial.html");
             return;
         }
 
         if ("iniciarJuego".equals(action)) {
-            int numeroSecreto = new Random().nextInt(100) + 1; // 1-100
+            int numeroSecreto = new Random().nextInt(100) + 1;
             session.setAttribute("numeroSecreto", numeroSecreto);
             session.setAttribute("intentos", 0);
             session.removeAttribute("resultado");
+            session.removeAttribute("pista");
+            session.removeAttribute("colorPista");
+            session.removeAttribute("intentosRestantes");
+            session.removeAttribute("puntos");
             resp.sendRedirect(req.getContextPath() + "/menu?view=juego");
             return;
         }
@@ -77,7 +96,6 @@ public class ServletPrimero extends HttpServlet {
             return;
         }
 
-        // Acción no reconocida -> volver al menú
         resp.sendRedirect(req.getContextPath() + "/menu");
     }
 
@@ -85,7 +103,6 @@ public class ServletPrimero extends HttpServlet {
         String usuario = req.getParameter("usuario");
         String password = req.getParameter("password");
 
-        // Validación simple: ambos campos no vacíos
         if (usuario != null && !usuario.trim().isEmpty() && password != null && !password.trim().isEmpty()) {
             HttpSession session = req.getSession(true);
             session.setAttribute("user", usuario.trim());
@@ -98,41 +115,61 @@ public class ServletPrimero extends HttpServlet {
     private void procesarIntento(HttpServletRequest req, HttpServletResponse resp, HttpSession session) throws IOException {
         Object secretObj = session.getAttribute("numeroSecreto");
         if (secretObj == null) {
-            // No hay juego iniciado
             resp.sendRedirect(req.getContextPath() + "/menu");
             return;
         }
 
         int numeroSecreto = (int) secretObj;
-        int intentos = session.getAttribute("intentos") != null ? (int) session.getAttribute("intentos") : 0;
+        int intentos = session.getAttribute("intentos") != null ?
+                (int) session.getAttribute("intentos") : 0;
+        final int MAX_INTENTOS = 10;
 
         String numeroStr = req.getParameter("numero");
-        String resultado;
         try {
             int numero = Integer.parseInt(numeroStr);
             intentos++;
             session.setAttribute("intentos", intentos);
 
             if (numero == numeroSecreto) {
-                resultado = "GANASTE en " + intentos + " intentos!";
-                // Guardar puntuación en el contexto de aplicación
-                addPuntuacion(session, intentos);
+                int puntos = Math.max(0, 10 - intentos + 1);
+                String resultado = "¡GANASTE en " + intentos + " intentos! Puntos obtenidos: " + puntos;
+                session.setAttribute("resultado", resultado);
+                session.setAttribute("puntos", puntos);
+                addPuntuacion(session, puntos);
+                session.removeAttribute("numeroSecreto");
+                session.removeAttribute("pista");
+                resp.sendRedirect(req.getContextPath() + "/menu?view=resultado");
+            } else if (intentos >= MAX_INTENTOS) {
+                String resultado = "¡PERDISTE! Se acabaron los intentos. El número era " + numeroSecreto + ". Puntos: 0";
+                session.setAttribute("resultado", resultado);
+                session.setAttribute("puntos", 0);
+                addPuntuacion(session, 0);
+                session.removeAttribute("numeroSecreto");
+                session.removeAttribute("pista");
+                resp.sendRedirect(req.getContextPath() + "/menu?view=resultado");
             } else {
-                resultado = "PERDISTE. El número era " + numeroSecreto + ". Has hecho " + intentos + " intentos.";
+                String pista;
+                String colorPista;
+                if (numero < numeroSecreto) {
+                    pista = "El número es SUPERIOR";
+                    colorPista = "green";
+                } else {
+                    pista = "El número es INFERIOR";
+                    colorPista = "red";
+                }
+                session.setAttribute("pista", pista);
+                session.setAttribute("colorPista", colorPista);
+                session.setAttribute("intentosRestantes", MAX_INTENTOS - intentos);
+                resp.sendRedirect(req.getContextPath() + "/menu?view=juego");
             }
-
-            session.setAttribute("resultado", resultado);
-            // Limpiar número secreto para forzar reinicio si quiere volver a jugar
-            session.removeAttribute("numeroSecreto");
         } catch (NumberFormatException e) {
-            session.setAttribute("resultado", "Entrada inválida. Introduce un número entero.");
+            session.setAttribute("pista", "Por favor, introduce un número válido");
+            session.setAttribute("colorPista", "orange");
+            resp.sendRedirect(req.getContextPath() + "/menu?view=juego");
         }
-
-        resp.sendRedirect(req.getContextPath() + "/menu?view=resultado");
     }
 
-    private void addPuntuacion(HttpSession session, int intentos) {
-        // Estructura compartida en el ServletContext para todas las puntuaciones
+    private void addPuntuacion(HttpSession session, int puntos) {
         List<String> lista = (List<String>) getServletContext().getAttribute("puntuaciones");
         if (lista == null) {
             List<String> nueva = Collections.synchronizedList(new ArrayList<>());
@@ -140,56 +177,7 @@ public class ServletPrimero extends HttpServlet {
             lista = nueva;
         }
         String usuario = (String) session.getAttribute("user");
-        lista.add(usuario + " - " + intentos + " intentos");
-    }
-
-    private void renderMenu(PrintWriter out, HttpSession session) {
-        out.println("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Menú</title></head><body>");
-        out.println("<h1>Bienvenido, " + escapeHtml((String) session.getAttribute("user")) + "</h1>");
-
-        // Botón iniciar juego (POST)
-        out.println("<form method='post' action='menu'>");
-        out.println("<button name='action' value='iniciarJuego' type='submit'>Iniciar Juego</button>");
-        out.println("</form><br>");
-
-        // Botón ver puntuaciones (GET a /puntuaciones)
-        out.println("<form method='get' action='puntuaciones'>");
-        out.println("<button type='submit'>Ver Puntuaciones</button>");
-        out.println("</form><br>");
-
-        // Botón salir (logout)
-        out.println("<form method='post' action='menu'>");
-        out.println("<button name='action' value='logout' type='submit'>Salir / Cerrar sesión</button>");
-        out.println("</form>");
-
-        out.println("</body></html>");
-    }
-
-    private void renderJuego(PrintWriter out, HttpSession session) {
-        out.println("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Juego - Adivina el número</title></head><body>");
-        out.println("<h1>Juego: Adivina el número</h1>");
-        out.println("<p>Introduce un número entre 1 y 100:</p>");
-        out.println("<form method='post' action='menu'>");
-        out.println("<input type='number' name='numero' min='1' max='100' required>");
-        out.println("<button name='action' value='adivinar' type='submit'>Adivinar</button>");
-        out.println("</form>");
-        out.println("<br><a href='menu'>Volver al Menú</a>");
-        out.println("</body></html>");
-    }
-
-    private void renderResultado(PrintWriter out, HttpSession session) {
-        String resultado = (String) session.getAttribute("resultado");
-        out.println("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Resultado</title></head><body>");
-        out.println("<h1>Resultado</h1>");
-        out.println("<p>" + escapeHtml(resultado) + "</p>");
-        out.println("<a href='menu'>Volver al Menú</a>");
-        out.println("</body></html>");
-    }
-
-    // Very small helper to avoid simple XSS from usernames/result strings
-    private String escapeHtml(String s) {
-        if (s == null) return "";
-        return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
-                .replace("\"", "&quot;").replace("'", "&#x27;");
+        lista.add(usuario + " ..... " + puntos + " puntos");
     }
 }
+

@@ -8,7 +8,6 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
 import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
-
 @WebListener
 public class ThymeleafInitializer implements ServletContextListener {
 
@@ -26,10 +25,6 @@ public class ThymeleafInitializer implements ServletContextListener {
         TemplateEngine templateEngine = new TemplateEngine();
         templateEngine.setTemplateResolver(resolutor);
 
-
         servletContext.setAttribute(ThymeleafConstants.TEAMPLATE_KEY_BUSQUEDA,templateEngine);
-
-
-    }}
-
-
+    }
+}

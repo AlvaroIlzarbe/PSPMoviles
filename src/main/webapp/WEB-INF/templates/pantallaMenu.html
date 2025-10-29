@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .menu-container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            text-align: center;
+            min-width: 300px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        form {
+            margin-bottom: 15px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .btn-juego {
+            background-color: #28a745;
+            color: white;
+        }
+        .btn-juego:hover {
+            background-color: #218838;
+        }
+        .btn-puntuaciones {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-puntuaciones:hover {
+            background-color: #0056b3;
+        }
+        .btn-salir {
+            background-color: #dc3545;
+            color: white;
+        }
+        .btn-salir:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu-container">
+        <h1>Bienvenido, <span th:text="${usuario}">Usuario</span></h1>
+
+        <form method="post" action="menu">
+            <button class="btn-juego" name="action" value="iniciarJuego" type="submit">Iniciar Juego</button>
+        </form>
+
+        <form method="get" action="puntuaciones">
+            <button class="btn-puntuaciones" type="submit">Ver Puntuaciones</button>
+        </form>
+
+        <form method="post" action="menu">
+            <button class="btn-salir" name="action" value="logout" type="submit">Salir / Cerrar Sesión</button>
+        </form>
+    </div>
+</body>
+</html>
+
