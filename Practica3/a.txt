@@ -1,0 +1,6 @@
+Notas: 
+- Dos menus
+- Menu uno para agregar y actualizar los jugadores 
+- Menu dos para agregar pokemon
+- Problema: ahora es una relación 1:1 de un jugador tiene un equipo 
+- Solucion: hacer una database de Pokemon con generador de IDs automatico. De esta forma un jugador puede tener el mismo Pokemon que otro y pasa a ser N:N 
