@@ -1,0 +1,16 @@
+NOtas: 
+
+
+El problema que tiene el trabajo es que ahora esta en relacion 1:1
+1 jugador 1 equipo
+CAMBIAR a relacion n:m 
+cada jugador tiene n pokes y cada poke puede ser usado por y jugadores
+
+Tema de los menus: 
+un menu para añadir los jugadores y actualizar los de la lista 
+un menu para añadir pokemon y actualizar los de la lista 
+posible tercer menu para selecionar borrar si se quiere borrar un jugador lleve a una pantalla de la lista con la implementacion de borrar e igual con pokemon 
+
+6 fragment minimo rellenarlos con lo correpsondiente 
+
+NO TE OLVIDES DE CAMBIAR LOS NOMBRES DE LOS FRAGMENT QUE NOS CONOCEMOS 
